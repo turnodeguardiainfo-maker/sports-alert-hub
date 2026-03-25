@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sports Alert Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0d0f14;
+  --surface:   #141720;
+  --surface2:  #1c2030;
+  --border:    #252a3a;
+  --border2:   #2e3450;
+
+  --red:       #f03a47;
+  --red-dim:   rgba(240,58,71,0.12);
+  --orange:    #f97316;
+  --orange-dim:rgba(249,115,22,0.12);
+  --yellow:    #eab308;
+  --yellow-dim:rgba(234,179,8,0.12);
+  --blue:      #3b82f6;
+  --blue-dim:  rgba(59,130,246,0.12);
+  --gray-dim:  rgba(148,163,184,0.08);
+
+  --text:      #e2e8f0;
+  --muted:     #64748b;
+  --hint:      #3a4255;
+
+  --nfl:  #003f7f;
+  --mlb:  #c6011f;
+  --nba:  #c9a227;
+  --ncaa: #1a3a6b;
+  --ncaaf:#8b1a1a;
+  --nhl:  #000e6e;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ── TOPBAR ───────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--red);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.brand-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.brand-name span { color: var(--red); }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.live-dot.on {
+  background: #22c55e;
+  animation: livepulse 2s infinite;
+}
+
+@keyframes livepulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+}
+
+.last-update {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── LEAGUE TABS ──────────────────────────────────────── */
+.league-tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: 56px;
+  z-index: 99;
+}
+
+.league-tabs::-webkit-scrollbar { display: none; }
+
+.league-tab {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  height: 48px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  position: relative;
+  white-space: nowrap;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.league-tab:hover { color: var(--text); }
+
+.league-tab.active {
+  color: var(--text);
+}
+
+.league-tab[data-league="NFL"].active  { border-bottom-color: #4a9eff; }
+.league-tab[data-league="MLB"].active  { border-bottom-color: var(--red); }
+.league-tab[data-league="NBA"].active  { border-bottom-color: var(--orange); }
+.league-tab[data-league="NCAA"].active { border-bottom-color: #60a5fa; }
+.league-tab[data-league="NCAAF"].active{ border-bottom-color: #f87171; }
+.league-tab[data-league="NHL"].active  { border-bottom-color: #818cf8; }
+
+.tab-badge {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--red);
+  color: white;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Barlow', sans-serif;
+  animation: badgepop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.tab-badge.visible { display: flex; }
+
+@keyframes badgepop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ── MAIN LAYOUT ──────────────────────────────────────── */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 0;
+  min-height: calc(100vh - 104px);
+}
+
+/* ── FEED ─────────────────────────────────────────────── */
+.feed-panel {
+  border-right: 1px solid var(--border);
+  padding: 20px;
+}
+
+.feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.feed-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+
+.pill:hover { border-color: var(--border2); color: var(--text); }
+.pill.active { color: white; border-color: transparent; }
+.pill[data-filter="all"].active    { background: var(--surface2); color: var(--text); }
+.pill[data-filter="red"].active    { background: var(--red); }
+.pill[data-filter="orange"].active { background: var(--orange); }
+.pill[data-filter="yellow"].active { background: var(--yellow); color: #1a1a1a; }
+.pill[data-filter="blue"].active   { background: var(--blue); }
+
+/* ── ALERT CARDS ──────────────────────────────────────── */
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+
+.alert-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: start;
+  transition: border-color 0.2s, background 0.2s;
+  animation: cardin 0.35s ease;
+}
+
+@keyframes cardin {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.alert-card:hover { background: var(--surface2); }
+
+.alert-card.red    { border-left-color: var(--red);    background: var(--red-dim); }
+.alert-card.orange { border-left-color: var(--orange); background: var(--orange-dim); }
+.alert-card.yellow { border-left-color: var(--yellow); background: var(--yellow-dim); }
+.alert-card.blue   { border-left-color: var(--blue);   background: var(--blue-dim); }
+.alert-card.gray   { border-left-color: var(--hint);   background: var(--gray-dim); }
+
+.alert-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.red    .alert-dot { background: var(--red); }
+.orange .alert-dot { background: var(--orange); }
+.yellow .alert-dot { background: var(--yellow); }
+.blue   .alert-dot { background: var(--blue); }
+.gray   .alert-dot { background: var(--hint); }
+
+.alert-body {}
+
+.alert-type {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.red    .alert-type { color: var(--red); }
+.orange .alert-type { color: var(--orange); }
+.yellow .alert-type { color: var(--yellow); }
+.blue   .alert-type { color: var(--blue); }
+.gray   .alert-type { color: var(--muted); }
+
+.alert-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.alert-meta {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.alert-league-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--surface2);
+  color: var(--muted);
+}
+
+.alert-time { font-variant-numeric: tabular-nums; }
+
+.alert-new-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--red);
+  color: white;
+  border-radius: 3px;
+  align-self: start;
+  flex-shrink: 0;
+  animation: newbadge 3s forwards;
+}
+
+@keyframes newbadge {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+
+.empty-state-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state-text { font-size: 14px; }
+
+/* ── SIDEBAR ──────────────────────────────────────────── */
+.sidebar { padding: 20px 16px; }
+
+.sidebar-section { margin-bottom: 24px; }
+
+.sidebar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* LEAGUE SUMMARY */
+.league-summary { display: flex; flex-direction: column; gap: 6px; }
+
+.league-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.league-row:hover { background: var(--surface2); }
+
+.league-row-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.league-row-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.league-row-count.has-alerts { color: var(--red); }
+
+/* PRIORITY LEGEND */
+.legend { display: flex; flex-direction: column; gap: 8px; }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* SETTINGS */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.setting-row:last-child { border-bottom: none; }
+
+.toggle {
+  width: 36px;
+  height: 20px;
+  background: var(--border2);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  flex-shrink: 0;
+}
+
+.toggle.on { background: #22c55e; }
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+
+.toggle.on::after { transform: translateX(16px); }
+
+/* ── POPUP ────────────────────────────────────────────── */
+.popup-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-overlay.visible { display: flex; }
+
+.popup {
+  background: var(--surface);
+  border: 1px solid var(--red);
+  border-top: 4px solid var(--red);
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 420px;
+  width: 90%;
+  animation: popupin 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+
+@keyframes popupin {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.popup-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.popup-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: livepulse 1s infinite;
+}
+
+.popup-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.popup-body {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.popup-meta {
+  font-size: 11px;
+  color: var(--hint);
+  margin-bottom: 20px;
+}
+
+.popup-close {
+  width: 100%;
+  padding: 10px;
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.popup-close:hover { opacity: 0.85; }
+
+.popup-dismiss {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+/* ── TOAST (alertas no rojas) ─────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 190;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  max-width: 320px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: toastin 0.3s ease, toastout 0.3s ease 4.7s forwards;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+@keyframes toastin  { from { opacity:0; transform:translateX(20px); } }
+@keyframes toastout { to   { opacity:0; transform:translateX(20px); } }
+
+.toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.toast-content { flex: 1; }
+.toast-type { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+.toast-text { font-size: 13px; color: var(--text); }
+
+/* ── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .main { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .feed-panel { padding: 16px; }
+}
+
+/* ── SCROLLBAR ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">⚡</div>
+    <div class="brand-name">Sports<span>Alert</span> Hub</div>
+  </div>
+  <div class="topbar-right">
+    <div class="live-indicator">
+      <div class="live-dot on" id="live-dot"></div>
+      <span id="live-text">En vivo</span>
+    </div>
+    <div class="last-update" id="last-update">—</div>
+  </div>
+</div>
+
+<!-- LEAGUE TABS -->
+<div class="league-tabs">
+  <button class="league-tab active" data-league="ALL" onclick="switchLeague('ALL', this)">
+    Todas
+    <span class="tab-badge" id="badge-ALL"></span>
+  </button>
+  <button class="league-tab" data-league="NFL" onclick="switchLeague('NFL', this)">
+    NFL
+    <span class="tab-badge" id="badge-NFL"></span>
+  </button>
+  <button class="league-tab" data-league="MLB" onclick="switchLeague('MLB', this)">
+    MLB
+    <span class="tab-badge" id="badge-MLB"></span>
+  </button>
+  <button class="league-tab" data-league="NBA" onclick="switchLeague('NBA', this)">
+    NBA
+    <span class="tab-badge" id="badge-NBA"></span>
+  </button>
+  <button class="league-tab" data-league="NCAA" onclick="switchLeague('NCAA', this)">
+    NCAA
+    <span class="tab-badge" id="badge-NCAA"></span>
+  </button>
+  <button class="league-tab" data-league="NCAAF" onclick="switchLeague('NCAAF', this)">
+    NCAAF
+    <span class="tab-badge" id="badge-NCAAF"></span>
+  </button>
+  <button class="league-tab" data-league="NHL" onclick="switchLeague('NHL', this)">
+    NHL
+    <span class="tab-badge" id="badge-NHL"></span>
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- FEED -->
+  <div class="feed-panel">
+    <div class="feed-header">
+      <div class="feed-title" id="feed-title">Todas las alertas</div>
+      <div class="filter-pills">
+        <button class="pill active" data-filter="all"    onclick="setFilter('all', this)">Todas</button>
+        <button class="pill"        data-filter="red"    onclick="setFilter('red', this)">🔴 Críticas</button>
+        <button class="pill"        data-filter="orange" onclick="setFilter('orange', this)">🟠 Lesiones</button>
+        <button class="pill"        data-filter="yellow" onclick="setFilter('yellow', this)">🟡 Sanciones</button>
+        <button class="pill"        data-filter="blue"   onclick="setFilter('blue', this)">🔵 Suspensiones</button>
+      </div>
+    </div>
+    <div class="alert-list" id="alert-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">📡</div>
+        <div class="empty-state-text">Conectando con las fuentes de datos...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Resumen por liga</div>
+      <div class="league-summary" id="league-summary">
+        <div class="league-row" onclick="switchLeague('NFL', document.querySelector('[data-league=NFL]'))">
+          <span class="league-row-name">NFL</span>
+          <span class="league-row-count" id="count-NFL">0 alertas</span>
+        </div>
+        <div class="league-row" onclick="switchLeague('MLB', document.querySelector('[data-league=MLB]'))">
+          <span class="league-row-name">MLB</span>
+          <span class="league-row-count" id="count-MLB">0 alertas</span>
+        </div>
+        <div class="league-row" onclick="switchLeague('NBA', document.querySelector('[data-league=NBA]'))">
+          <span class="league-row-name">NBA</span>
+          <span class="league-row-count" id="count-NBA">0 alertas</span>
+        </div>
+        <div class="league-row" onclick="switchLeague('NCAA', document.querySelector('[data-league=NCAA]'))">
+          <span class="league-row-name">NCAA</span>
+          <span class="league-row-count" id="count-NCAA">0 alertas</span>
+        </div>
+        <div class="league-row" onclick="switchLeague('NCAAF', document.querySelector('[data-league=NCAAF]'))">
+          <span class="league-row-name">NCAAF</span>
+          <span class="league-row-count" id="count-NCAAF">0 alertas</span>
+        </div>
+        <div class="league-row" onclick="switchLeague('NHL', document.querySelector('[data-league=NHL]'))">
+          <span class="league-row-name">NHL</span>
+          <span class="league-row-count" id="count-NHL">0 alertas</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Prioridad</div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--red)"></div>
+          Pitcher / QB / Quinteto inicial
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--orange)"></div>
+          Lesionado / No disponible
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--yellow)"></div>
+          Sancionado
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--blue)"></div>
+          Suspensión de partido
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--hint)"></div>
+          Draft / Transferencia
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Ajustes</div>
+      <div class="setting-row">
+        <span>Sonido alertas críticas</span>
+        <button class="toggle on" id="toggle-sound" onclick="toggleSetting('sound', this)"></button>
+      </div>
+      <div class="setting-row">
+        <span>Popup alertas críticas</span>
+        <button class="toggle on" id="toggle-popup" onclick="toggleSetting('popup', this)"></button>
+      </div>
+      <div class="setting-row">
+        <span>Notificaciones browser</span>
+        <button class="toggle" id="toggle-notif" onclick="toggleSetting('notif', this)"></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- POPUP OVERLAY (alertas rojas) -->
+<div class="popup-overlay" id="popup-overlay" onclick="closePopup(event)">
+  <div class="popup">
+    <button class="popup-dismiss" onclick="closePopup()">✕</button>
+    <div class="popup-label" id="popup-label">Alerta crítica</div>
+    <div class="popup-title" id="popup-title">—</div>
+    <div class="popup-body"  id="popup-body">—</div>
+    <div class="popup-meta"  id="popup-meta">—</div>
+    <button class="popup-close" onclick="closePopup()">Entendido</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- AUDIO (sonido de alerta) -->
+<audio id="alert-sound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhS0p3n77HuZZmOzEzTHWivMbFtI5cMicrQ2mXtMfLxbCLXDUnIzdbe6vCzs7Hsp9vQS4pMlF5p7/P0NDKuaBxRDEuNFd/qcDP0tHMurR8SC8rM1mDrsTT1dLOvbh5SS8sM1qFr8XU1dPPv7h4SC4rM1qFr8XV1dTPv7h4SC4rM1qFr8XV1dTPv7h4SC4r" type="audio/wav">
+</audio>
+
+<script>
+// ── STATE ───────────────────────────────────────────────
+const state = {
+  alerts:       [],
+  filter:       'all',
+  league:       'ALL',
+  seenIds:      new Set(),
+  settings: {
+    sound: true,
+    popup: true,
+    notif: false,
+  },
+  leagueCounts: { NFL:0, MLB:0, NBA:0, NCAA:0, NCAAF:0, NHL:0 },
+  polling:      null,
+  isGameDay:    false,
+};
+
+const ALERT_TYPES = {
+  pitcher:    { label: 'Cambio de pitcher',    color: 'red',    priority: 1 },
+  qb:         { label: 'QB inicial',           color: 'red',    priority: 1 },
+  lineup:     { label: 'Quinteto inicial',     color: 'red',    priority: 1 },
+  goalie:     { label: 'Goalie probable',      color: 'red',    priority: 1 },
+  injury:     { label: 'Lesionado',            color: 'orange', priority: 2 },
+  suspension: { label: 'Partido suspendido',   color: 'blue',   priority: 4 },
+  sanction:   { label: 'Sancionado',           color: 'yellow', priority: 3 },
+  draft:      { label: 'Draft / Transferencia',color: 'gray',   priority: 5 },
+};
+
+// ── DEMO DATA (sustituir por fetch al JSON de Apps Script) ──
+const DEMO_ALERTS = [
+  { id:'1', league:'MLB', type:'pitcher', text:'Gerrit Cole reemplazado por Carlos Rodón como abridor. Yankees vs Red Sox · 19:10 ET', ts: Date.now() - 2*60000 },
+  { id:'2', league:'NFL', type:'injury',  text:'Patrick Mahomes descartado para el partido del domingo. Chiefs vs Raiders', ts: Date.now() - 8*60000 },
+  { id:'3', league:'NBA', type:'lineup',  text:'LeBron James no entra en el quinteto inicial. Lakers vs Warriors · 22:30 ET', ts: Date.now() - 15*60000 },
+  { id:'4', league:'NHL', type:'goalie',  text:'Connor Hellebuyck confirmado como titular. Jets vs Avalanche · 20:00 ET', ts: Date.now() - 22*60000 },
+  { id:'5', league:'MLB', type:'suspension', text:'Partido suspendido por lluvia. Mets vs Cubs · Nueva fecha por confirmar', ts: Date.now() - 35*60000 },
+  { id:'6', league:'NFL', type:'sanction', text:'Davante Adams sancionado con 1 partido. Raiders', ts: Date.now() - 48*60000 },
+  { id:'7', league:'NCAA', type:'lineup', text:'Quinteto inicial confirmado. Duke vs UNC · 21:00 ET', ts: Date.now() - 55*60000 },
+  { id:'8', league:'NCAAF', type:'injury', text:'Caleb Williams es duda para el próximo partido. USC Trojans', ts: Date.now() - 70*60000 },
+  { id:'9', league:'NBA', type:'draft',   text:'Victor Wembanyama fichado por los Spurs. Pick #1 Draft 2023', ts: Date.now() - 90*60000 },
+  { id:'10',league:'NHL', type:'suspension', text:'Partido pospuesto por problemas técnicos en el pabellón. Bruins vs Penguins', ts: Date.now() - 110*60000 },
+];
+
+// ── INIT ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+  loadAlerts(DEMO_ALERTS);
+  startPolling();
+});
+
+// ── POLLING ─────────────────────────────────────────────
+function startPolling() {
+  checkGameDay();
+  const interval = state.isGameDay ? 5 * 60 * 1000 : 15 * 60 * 1000;
+  clearInterval(state.polling);
+  state.polling = setInterval(fetchAlerts, interval);
+  updateLiveIndicator(true);
+}
+
+function checkGameDay() {
+  // En producción: consultar si hay partidos hoy
+  // Por ahora asumimos que sí hay partidos
+  state.isGameDay = true;
+}
+
+async function fetchAlerts() {
+  // ============================================================
+  //  PEGA TU URL AQUÍ — la que termina en /exec
+  //  Ejemplo: https://script.google.com/macros/s/XXXXXXX/exec
+  // ============================================================
+  var MOTOR_URL = "https://script.google.com/macros/s/AKfycbx6BLYkZaukp8JZE2umH9wW1PFu2gXcaIB9Ym-dbxQjAeJpObWvkxpn4pByF3cMdXoQ/exec";
+  // ============================================================
+
+  if (MOTOR_URL === "PEGA_AQUI_TU_URL") {
+    updateLastUpdate();
+    return;
+  }
+
+  try {
+    var res  = await fetch(MOTOR_URL);
+    var data = await res.json();
+    if (data && data.alerts) processAlerts(data.alerts);
+    updateLastUpdate();
+  } catch(e) {
+    updateLiveIndicator(false);
+  }
+}
+
+// ── ALERT PROCESSING ────────────────────────────────────
+function loadAlerts(alerts) {
+  alerts.forEach(a => {
+    state.alerts.push(a);
+    state.seenIds.add(a.id);
+  });
+  state.alerts.sort((a,b) => b.ts - a.ts);
+  updateLeagueCounts();
+  renderFeed();
+  updateLastUpdate();
+}
+
+function processAlerts(newAlerts) {
+  let hasNew = false;
+  newAlerts.forEach(a => {
+    if (!state.seenIds.has(a.id)) {
+      state.seenIds.add(a.id);
+      state.alerts.unshift(a);
+      hasNew = true;
+      triggerAlert(a);
+    }
+  });
+  if (hasNew) {
+    updateLeagueCounts();
+    renderFeed();
+  }
+}
+
+function triggerAlert(alert) {
+  const type = ALERT_TYPES[alert.type] || ALERT_TYPES.draft;
+
+  if (type.color === 'red') {
+    if (state.settings.sound) playSound();
+    if (state.settings.popup) showPopup(alert);
+    updateTabBadge(alert.league);
+  } else {
+    showToast(alert, type);
+    updateTabBadge(alert.league);
+  }
+
+  if (state.settings.notif && 'Notification' in window && Notification.permission === 'granted') {
+    new Notification('Sports Alert Hub', { body: alert.text });
+  }
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function renderFeed() {
+  const list = document.getElementById('alert-list');
+  let filtered = state.alerts.filter(a => {
+    const leagueOk = state.league === 'ALL' || a.league === state.league;
+    const type     = ALERT_TYPES[a.type] || ALERT_TYPES.draft;
+    const filterOk = state.filter === 'all' || type.color === state.filter;
+    return leagueOk && filterOk;
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">✅</div>
+        <div class="empty-state-text">Sin alertas en este momento</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((a, i) => {
+    const type    = ALERT_TYPES[a.type] || ALERT_TYPES.draft;
+    const isNew   = Date.now() - a.ts < 3 * 60 * 1000;
+    const timeStr = formatTime(a.ts);
+    return `
+    <div class="alert-card ${type.color}">
+      <div class="alert-dot"></div>
+      <div class="alert-body">
+        <div class="alert-type">${type.label}</div>
+        <div class="alert-text">${a.text}</div>
+        <div class="alert-meta">
+          <span class="alert-league-badge">${a.league}</span>
+          <span class="alert-time">${timeStr}</span>
+        </div>
+      </div>
+      ${isNew ? '<div class="alert-new-badge">Nuevo</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── UI CONTROLS ──────────────────────────────────────────
+function switchLeague(league, el) {
+  state.league = league;
+  document.querySelectorAll('.league-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const title = league === 'ALL' ? 'Todas las alertas' : league + ' — Alertas';
+  document.getElementById('feed-title').textContent = title;
+  clearTabBadge(league);
+  renderFeed();
+}
+
+function setFilter(filter, el) {
+  state.filter = filter;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderFeed();
+}
+
+function toggleSetting(key, btn) {
+  state.settings[key] = !state.settings[key];
+  btn.classList.toggle('on', state.settings[key]);
+  saveSettings();
+  if (key === 'notif' && state.settings.notif) {
+    Notification.requestPermission().then(p => {
+      if (p !== 'granted') {
+        state.settings.notif = false;
+        btn.classList.remove('on');
+      }
+    });
+  }
+}
+
+function saveSettings() {
+  localStorage.setItem('sah_settings', JSON.stringify(state.settings));
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem('sah_settings');
+  if (saved) {
+    Object.assign(state.settings, JSON.parse(saved));
+    Object.keys(state.settings).forEach(k => {
+      const btn = document.getElementById('toggle-' + k);
+      if (btn) btn.classList.toggle('on', state.settings[k]);
+    });
+  }
+}
+
+// ── POPUP ────────────────────────────────────────────────
+function showPopup(alert) {
+  const type = ALERT_TYPES[alert.type] || ALERT_TYPES.draft;
+  document.getElementById('popup-label').textContent = type.label + ' — ' + alert.league;
+  document.getElementById('popup-title').textContent = alert.text.split('.')[0];
+  document.getElementById('popup-body').textContent  = alert.text;
+  document.getElementById('popup-meta').textContent  = formatTime(alert.ts);
+  document.getElementById('popup-overlay').classList.add('visible');
+}
+
+function closePopup(e) {
+  if (e && e.target !== document.getElementById('popup-overlay')) return;
+  document.getElementById('popup-overlay').classList.remove('visible');
+}
+
+// ── TOAST ────────────────────────────────────────────────
+function showToast(alert, type) {
+  const container = document.getElementById('toast-container');
+  const toast     = document.createElement('div');
+  toast.className = 'toast';
+
+  const colors = { orange: 'var(--orange)', yellow: 'var(--yellow)', blue: 'var(--blue)', gray: 'var(--hint)' };
+
+  toast.innerHTML = `
+    <div class="toast-dot" style="background:${colors[type.color] || 'var(--hint)'}"></div>
+    <div class="toast-content">
+      <div class="toast-type" style="color:${colors[type.color] || 'var(--muted)'}">${type.label} · ${alert.league}</div>
+      <div class="toast-text">${alert.text.length > 80 ? alert.text.slice(0,80) + '…' : alert.text}</div>
+    </div>`;
+
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
+
+// ── SOUND ────────────────────────────────────────────────
+function playSound() {
+  try {
+    // Crear un beep simple con Web Audio API
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+// ── BADGES ───────────────────────────────────────────────
+function updateTabBadge(league) {
+  ['ALL', league].forEach(l => {
+    const badge = document.getElementById('badge-' + l);
+    if (!badge) return;
+    const current = parseInt(badge.textContent) || 0;
+    badge.textContent = current + 1;
+    badge.classList.add('visible');
+  });
+}
+
+function clearTabBadge(league) {
+  const badge = document.getElementById('badge-' + league);
+  if (badge) { badge.textContent = ''; badge.classList.remove('visible'); }
+}
+
+// ── LEAGUE COUNTS ────────────────────────────────────────
+function updateLeagueCounts() {
+  const leagues = ['NFL','MLB','NBA','NCAA','NCAAF','NHL'];
+  leagues.forEach(l => {
+    const count = state.alerts.filter(a => a.league === l).length;
+    const el    = document.getElementById('count-' + l);
+    if (el) {
+      el.textContent = count + (count === 1 ? ' alerta' : ' alertas');
+      el.classList.toggle('has-alerts', count > 0);
+    }
+  });
+}
+
+// ── HELPERS ──────────────────────────────────────────────
+function formatTime(ts) {
+  const diff = Math.floor((Date.now() - ts) / 60000);
+  if (diff < 1)  return 'Ahora mismo';
+  if (diff < 60) return 'Hace ' + diff + ' min';
+  const h = Math.floor(diff / 60);
+  return 'Hace ' + h + 'h ' + (diff % 60) + 'min';
+}
+
+function updateLastUpdate() {
+  const now = new Date();
+  document.getElementById('last-update').textContent =
+    'Actualizado ' + now.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+function updateLiveIndicator(online) {
+  document.getElementById('live-dot').classList.toggle('on', online);
+  document.getElementById('live-text').textContent = online ? 'En vivo' : 'Sin conexión';
+}
+
+// ── DEMO: simular alerta en vivo ─────────────────────────
+const DEMO_LIVE = [
+  { league:'MLB', type:'pitcher',    text:'Shane Bieber sustituido por Trevor Stephan. Guardians vs Tigers · 18:40 ET' },
+  { league:'NFL', type:'qb',         text:'Josh Allen confirmado como titular pese a molestias. Bills vs Dolphins · 20:15 ET' },
+  { league:'NBA', type:'injury',     text:'Nikola Jokic descartado por protocolo de conmoción. Nuggets vs Celtics' },
+  { league:'NHL', type:'suspension', text:'Partido aplazado por tormenta de nieve. Sabres vs Senators' },
+  { league:'NCAA',type:'lineup',     text:'Quinteto inicial confirmado. Michigan vs Ohio State · 19:00 ET' },
+];
+
+let demoIdx = 0;
+function simulateLiveAlert() {
+  if (Math.random() > 0.4) return; // No siempre hay novedad
+  const a = DEMO_LIVE[demoIdx % DEMO_LIVE.length];
+  demoIdx++;
+  const newAlert = { ...a, id: 'live_' + Date.now(), ts: Date.now() };
+  processAlerts([newAlert]);
+}
+</script>
+</body>
+</html>
