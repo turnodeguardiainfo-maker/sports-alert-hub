@@ -843,24 +843,10 @@ const ALERT_TYPES = {
   draft:      { label: 'Draft / Transferencia',color: 'gray',   priority: 5 },
 };
 
-// ── DEMO DATA (sustituir por fetch al JSON de Apps Script) ──
-const DEMO_ALERTS = [
-  { id:'1', league:'MLB', type:'pitcher', text:'Gerrit Cole reemplazado por Carlos Rodón como abridor. Yankees vs Red Sox · 19:10 ET', ts: Date.now() - 2*60000 },
-  { id:'2', league:'NFL', type:'injury',  text:'Patrick Mahomes descartado para el partido del domingo. Chiefs vs Raiders', ts: Date.now() - 8*60000 },
-  { id:'3', league:'NBA', type:'lineup',  text:'LeBron James no entra en el quinteto inicial. Lakers vs Warriors · 22:30 ET', ts: Date.now() - 15*60000 },
-  { id:'4', league:'NHL', type:'goalie',  text:'Connor Hellebuyck confirmado como titular. Jets vs Avalanche · 20:00 ET', ts: Date.now() - 22*60000 },
-  { id:'5', league:'MLB', type:'suspension', text:'Partido suspendido por lluvia. Mets vs Cubs · Nueva fecha por confirmar', ts: Date.now() - 35*60000 },
-  { id:'6', league:'NFL', type:'sanction', text:'Davante Adams sancionado con 1 partido. Raiders', ts: Date.now() - 48*60000 },
-  { id:'7', league:'NCAA', type:'lineup', text:'Quinteto inicial confirmado. Duke vs UNC · 21:00 ET', ts: Date.now() - 55*60000 },
-  { id:'8', league:'NCAAF', type:'injury', text:'Caleb Williams es duda para el próximo partido. USC Trojans', ts: Date.now() - 70*60000 },
-  { id:'9', league:'NBA', type:'draft',   text:'Victor Wembanyama fichado por los Spurs. Pick #1 Draft 2023', ts: Date.now() - 90*60000 },
-  { id:'10',league:'NHL', type:'suspension', text:'Partido pospuesto por problemas técnicos en el pabellón. Bruins vs Penguins', ts: Date.now() - 110*60000 },
-];
-
 // ── INIT ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
-  loadAlerts(DEMO_ALERTS);
+  // Sin datos demo — los datos llegan del motor en tiempo real
   startPolling();
 });
 
@@ -948,7 +934,8 @@ function triggerAlert(alert) {
 }
 
 // ── RENDER ───────────────────────────────────────────────
-const H24 = 24 * 60 * 60 * 1000;
+const H24 = 2 * 60 * 60 * 1000;  // 2 horas para alertas no críticas
+const H1  = 1 * 60 * 60 * 1000;
 
 function renderFeed() {
   const list = document.getElementById('alert-list');
@@ -959,7 +946,11 @@ function renderFeed() {
     const type     = ALERT_TYPES[a.type] || ALERT_TYPES.draft;
     const filterOk = state.filter === 'all' || type.color === state.filter;
     const within24 = (now - a.ts) <= H24;
-    return leagueOk && filterOk && within24;
+    const within1h  = (now - a.ts) <= H1;
+    // Alertas rojas desaparecen tras 1 hora, el resto tras 24h
+    const type2 = ALERT_TYPES[a.type] || ALERT_TYPES.draft;
+    const timeOk = type2.color === 'red' ? within1h : within24;
+    return leagueOk && filterOk && timeOk;
   });
 
   if (filtered.length === 0) {
@@ -1079,18 +1070,27 @@ function showToast(alert, type) {
 // ── SOUND ────────────────────────────────────────────────
 function playSound() {
   try {
-    // Crear un beep simple con Web Audio API
     const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-    const osc  = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.4);
+
+    // 3 pitidos cortos y notorios
+    function beep(startTime, freq) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.4, startTime + 0.01);
+      gain.gain.setValueAtTime(0.4, startTime + 0.1);
+      gain.gain.linearRampToValueAtTime(0, startTime + 0.18);
+      osc.start(startTime);
+      osc.stop(startTime + 0.2);
+    }
+
+    beep(ctx.currentTime,        880);
+    beep(ctx.currentTime + 0.25, 880);
+    beep(ctx.currentTime + 0.5,  1100);
   } catch(e) {}
 }
 
