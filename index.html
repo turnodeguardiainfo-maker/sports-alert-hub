@@ -948,20 +948,29 @@ function triggerAlert(alert) {
 }
 
 // ── RENDER ───────────────────────────────────────────────
+const H24 = 24 * 60 * 60 * 1000;
+
 function renderFeed() {
   const list = document.getElementById('alert-list');
+  const now  = Date.now();
+
   let filtered = state.alerts.filter(a => {
     const leagueOk = state.league === 'ALL' || a.league === state.league;
     const type     = ALERT_TYPES[a.type] || ALERT_TYPES.draft;
     const filterOk = state.filter === 'all' || type.color === state.filter;
-    return leagueOk && filterOk;
+    const within24 = (now - a.ts) <= H24;
+    return leagueOk && filterOk && within24;
   });
 
   if (filtered.length === 0) {
+    const msg = state.league === 'ALL'
+      ? 'Sin novedades en las últimas 24 horas'
+      : 'Sin novedades en ' + state.league + ' en las últimas 24 horas';
     list.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">✅</div>
-        <div class="empty-state-text">Sin alertas en este momento</div>
+        <div class="empty-state-icon">\u2705</div>
+        <div class="empty-state-text">${msg}</div>
+        <div style="font-size:12px;color:var(--hint);margin-top:8px">El sistema sigue monitorizando en segundo plano</div>
       </div>`;
     return;
   }
